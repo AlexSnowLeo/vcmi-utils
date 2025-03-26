@@ -1,19 +1,18 @@
-using System.Xml;
-using System;
 using Microsoft.Extensions.Configuration;
-using System.Text.Json.Serialization;
 using System.Text.Json;
-using TranslationEditor;
 
-namespace TranslateEditor
+namespace TranslationEditor
 {
     public partial class MainForm : Form
     {
         private string _lang;
+        private string _langEng;
         private readonly string _langFolder;
+        private readonly string? _langEnFolder;
         private string _langFileName;
-        private readonly string[] _langEngJson;
-        private readonly Dictionary<string, string> _langEngData;
+        private string[] _langEngJson;
+        private readonly bool _useSeparateFolders;
+        private Dictionary<string, string> _langEngData;
         private readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
         {
             ReadCommentHandling = JsonCommentHandling.Skip
@@ -39,8 +38,28 @@ namespace TranslateEditor
                 return;
             }
 
-            var langEng = config.GetSection("LangEng").Value ?? "english";
-            _langEngJson = File.ReadAllLines(Path.Combine(_langFolder, $"{langEng}.json"));
+            _useSeparateFolders = config.GetSection("UseSeparateFolders").Value == "True";
+            if (_useSeparateFolders)
+            {
+                _langEnFolder = config.GetSection("LangEnFolder").Value;
+                if (string.IsNullOrEmpty(_langEnFolder))
+                {
+                    MessageBox.Show("Please specify the 'LangEnFolder' in the appsettings.json");
+                    return;
+                }
+
+                if (!Directory.Exists(_langEnFolder))
+                {
+                    MessageBox.Show(
+                        $"Directory not found: '{_langEnFolder}'\n\n" +
+                        $"Please specify the 'LangEnFolder' in the appsettings.json");
+
+                    return;
+                }
+            }
+
+            _langEng = config.GetSection("LangEng").Value ?? "english";
+            _langEngJson = File.ReadAllLines(Path.Combine(_useSeparateFolders ? _langEnFolder : _langFolder, $"{_langEng}.json"));
             _langEngData = JsonSerializer.Deserialize<Dictionary<string, string>>(string.Join("\r\n", _langEngJson), jsonSerializerOptions) ?? [];
 
             _lang = config.GetSection("Lang").Value ?? "russian";
@@ -102,6 +121,9 @@ namespace TranslateEditor
             }
 
             string langValue = gridLang.Rows[e.RowIndex].Cells[2].Value as string ?? string.Empty;
+            langValue = langValue.Replace("\n", "\\n").Replace("\r", "").Replace("—", "-");
+            gridLang.Rows[e.RowIndex].Cells[2].Value = langValue;
+
             string enValue = gridLang.Rows[e.RowIndex].Cells[1].Value as string ?? string.Empty;
 
             var isUpdated = enValue?.Trim() != langValue?.Trim() && !string.IsNullOrWhiteSpace(langValue);
@@ -186,6 +208,13 @@ namespace TranslateEditor
             _lang = lang;
             SecondLang.HeaderText = _lang;
 
+            if (_useSeparateFolders)
+            {
+                _langEng = lang;
+                _langEngJson = File.ReadAllLines(Path.Combine(_langEnFolder!, $"{_langEng}.json"));
+                _langEngData = JsonSerializer.Deserialize<Dictionary<string, string>>(string.Join("\r\n", _langEngJson), jsonSerializerOptions) ?? [];
+            }
+
             _langFileName = Path.Combine(_langFolder, $"{_lang}.json");
             _langJson = [.. File.ReadAllLines(_langFileName)];
             _langData = JsonSerializer.Deserialize<Dictionary<string, string>>(string.Join("\r\n", _langJson), jsonSerializerOptions);
@@ -194,6 +223,8 @@ namespace TranslateEditor
                 return;
 
             gridLang.RowCount = _langEngData.Count;
+
+            gridLang.RowHeadersWidth = gridLang.RowCount >= 1000 ? 60 : gridLang.RowCount >= 100 ? 50 : 40;
 
             var i = 0;
             foreach (var l in _langEngData)
@@ -204,6 +235,7 @@ namespace TranslateEditor
                 gridLang.Rows[i].Cells[0].Value = l.Key;
                 gridLang.Rows[i].Cells[1].Value = enValue.Replace("\n", "\\n");
                 gridLang.Rows[i].Cells[2].Value = langValue?.Replace("\n", "\\n");
+                gridLang.Rows[i].HeaderCell.Value = (i + 1).ToString();
 
                 var isUpdated = enValue?.Trim() != langValue?.Trim() && !string.IsNullOrWhiteSpace(langValue);
                 gridLang.Rows[i].Cells[2].Style.BackColor = isUpdated
@@ -226,6 +258,135 @@ namespace TranslateEditor
             var convertForm = new ConvertForm();
             convertForm.Owner = this;
             convertForm.Show();
+        }
+
+        private void btnUppercase_Click(object sender, EventArgs e)
+        {
+            if (_langData == null)
+                return;
+
+            var upcaseForm = new UppercaseForm();
+            upcaseForm.Owner = this;
+            var result = upcaseForm.ShowDialog();
+
+            if (result == DialogResult.Cancel)
+                return;
+
+            var word = upcaseForm.textWord.Text;
+            var wordsBefore = upcaseForm.textWordsBefore.Text.Split(',');
+
+            //var test = CapitalizeWords("совет повелителей драконов и остальных невинных лазурных драконих, павших жертвой некромантов", word, wordsBefore);
+            //return;
+
+            var count = 0;
+            var i = 0;
+            foreach (var data in _langData)
+            {
+                var processedData = CapitalizeWords(data.Value, word, wordsBefore);
+                if (processedData != data.Value)
+                {
+                    count++;
+
+                    var dataRow = string.Empty;
+                    for (int k = 0; k < _langEngJson.Length; k++)
+                    {
+                        if (_langJson[k].Contains($"\"{data.Key}\""))
+                        {
+                            _langJson[k] = _langJson[k].Replace($"\"{data.Value.Replace("\"", "\\\"")}\"", $"\"{processedData.Replace("\"", "\\\"")}\"");
+                            break;
+                        }
+                    }
+
+                    _langData[data.Key] = processedData;
+                    gridLang.Rows[i].Cells[2].Value = processedData.Replace("\n", "\\n");
+                    gridLang.Rows[i].Cells[2].Style.BackColor = Color.Yellow;
+                }
+
+                i++;
+            }
+
+            if (count > 0)
+                File.WriteAllLines(_langFileName, _langJson);
+        }
+
+        private static string CapitalizeWords(string text, string word, string[] wordsBefore)
+        {
+            var words = text.Split(' ');
+            for (int i = 0; i < words.Length - 1; i++)
+            {
+                if (words[i + 1].ToLower().StartsWith(word))
+                {
+                    if (wordsBefore.Any(x => words[i].ToLower().StartsWith(x)))
+                    {
+                        words[i + 1] = char.ToUpper(words[i + 1][0]) + words[i + 1].Substring(1);
+                        words[i] = char.ToUpper(words[i][0]) + words[i].Substring(1);
+                    }
+                }
+            }
+
+            return string.Join(" ", words);
+        }
+
+        private void btnCreateFromOrig_Click(object sender, EventArgs e)
+        {
+            var newLangJson = new List<string>(_langEngJson);
+
+            foreach (DataGridViewRow row in gridLang.Rows)
+            {
+                var key = row.Cells[0].Value?.ToString();
+                var enValue = row.Cells[1].Value?.ToString() ?? string.Empty;
+                var langValue = row.Cells[2].Value?.ToString() ?? string.Empty;
+                if (string.IsNullOrEmpty(langValue))
+                    langValue = enValue;
+
+                var dataRow = string.Empty;
+                for (int i = 0; i < newLangJson.Count; i++)
+                {
+                    if (newLangJson[i].Contains($"\"{key}\""))
+                    {
+                        newLangJson[i] = newLangJson[i].Replace($"\"{enValue!.Replace("\"", "\\\"")}\"", $"\"{langValue!.Replace("\"", "\\\"")}\"");
+                        break;
+                    }
+                }
+            }
+
+            File.WriteAllLines(_langFileName + ".new", newLangJson);
+        }
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+            var idx = gridLang.SelectedCells.Count > 0 ? gridLang.SelectedCells[0].RowIndex : 0;
+
+            gridLang.ClearSelection();
+
+            for (int i = idx + 1; i < gridLang.Rows.Count; i++)
+            {
+                var row = gridLang.Rows[i];
+                if (row.Cells[2].Style.BackColor == Color.LightCoral)
+                {
+                    row.Selected = true;
+                    gridLang.FirstDisplayedScrollingRowIndex = i;
+                    break;
+                }
+            }
+        }
+
+        private void btnPrev_Click(object sender, EventArgs e)
+        {
+            var idx = gridLang.SelectedCells.Count > 0 ? gridLang.SelectedCells[0].RowIndex : 0;
+
+            gridLang.ClearSelection();
+
+            for (int i = idx - 1; i >= 0; i--)
+            {
+                var row = gridLang.Rows[i];
+                if (row.Cells[2].Style.BackColor == Color.LightCoral)
+                {
+                    row.Selected = true;
+                    gridLang.FirstDisplayedScrollingRowIndex = i;
+                    break;
+                }
+            }
         }
     }
 }

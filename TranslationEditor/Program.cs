@@ -1,4 +1,4 @@
-namespace TranslateEditor
+namespace TranslationEditor
 {
     internal static class Program
     {

@@ -1,4 +1,4 @@
-﻿namespace TranslateEditor
+﻿namespace TranslationEditor
 {
     partial class MainForm
     {
@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
@@ -43,7 +42,14 @@
             tbSearch = new ToolStripTextBox();
             btnSearch = new ToolStripButton();
             toolStripSeparator2 = new ToolStripSeparator();
+            btnNext = new ToolStripButton();
+            btnPrev = new ToolStripButton();
+            toolStripSeparator5 = new ToolStripSeparator();
             btnConvert = new ToolStripButton();
+            toolStripSeparator3 = new ToolStripSeparator();
+            btnUppercase = new ToolStripButton();
+            toolStripSeparator4 = new ToolStripSeparator();
+            btnCreateFromOrig = new ToolStripButton();
             gridLang = new DataGridView();
             Key = new DataGridViewTextBoxColumn();
             FirstLang = new DataGridViewTextBoxColumn();
@@ -56,9 +62,9 @@
             // statusStrip
             // 
             statusStrip.Items.AddRange(new ToolStripItem[] { lblFolder, toolStripStatusLabel2, lblCount });
-            statusStrip.Location = new Point(0, 793);
+            statusStrip.Location = new Point(0, 839);
             statusStrip.Name = "statusStrip";
-            statusStrip.Size = new Size(1287, 22);
+            statusStrip.Size = new Size(1384, 22);
             statusStrip.TabIndex = 0;
             statusStrip.Text = "statusStrip1";
             // 
@@ -82,10 +88,10 @@
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripLabel2, cbLang, toolStripSeparator1, tbSearch, btnSearch, toolStripSeparator2, btnConvert });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripLabel2, cbLang, toolStripSeparator1, tbSearch, btnSearch, toolStripSeparator2, btnNext, btnPrev, toolStripSeparator5, btnConvert, toolStripSeparator3, btnUppercase, toolStripSeparator4, btnCreateFromOrig });
             toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new Size(1287, 25);
+            toolStrip1.Size = new Size(1384, 25);
             toolStrip1.TabIndex = 1;
             toolStrip1.Text = "toolStrip1";
             // 
@@ -117,7 +123,6 @@
             // btnSearch
             // 
             btnSearch.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            btnSearch.Image = (Image)resources.GetObject("btnSearch.Image");
             btnSearch.ImageTransparentColor = Color.Magenta;
             btnSearch.Name = "btnSearch";
             btnSearch.Size = new Size(46, 22);
@@ -130,15 +135,65 @@
             toolStripSeparator2.Name = "toolStripSeparator2";
             toolStripSeparator2.Size = new Size(6, 25);
             // 
+            // btnNext
+            // 
+            btnNext.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            btnNext.ImageTransparentColor = Color.Magenta;
+            btnNext.Name = "btnNext";
+            btnNext.Size = new Size(23, 22);
+            btnNext.Text = "⬇️";
+            btnNext.Click += btnNext_Click;
+            // 
+            // btnPrev
+            // 
+            btnPrev.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            btnPrev.ImageTransparentColor = Color.Magenta;
+            btnPrev.Name = "btnPrev";
+            btnPrev.Size = new Size(23, 22);
+            btnPrev.Text = "⬆️";
+            btnPrev.Click += btnPrev_Click;
+            // 
+            // toolStripSeparator5
+            // 
+            toolStripSeparator5.Name = "toolStripSeparator5";
+            toolStripSeparator5.Size = new Size(6, 25);
+            // 
             // btnConvert
             // 
             btnConvert.DisplayStyle = ToolStripItemDisplayStyle.Text;
-            btnConvert.Image = (Image)resources.GetObject("btnConvert.Image");
             btnConvert.ImageTransparentColor = Color.Magenta;
             btnConvert.Name = "btnConvert";
             btnConvert.Size = new Size(53, 22);
             btnConvert.Text = "Convert";
             btnConvert.Click += btnConvert_Click;
+            // 
+            // toolStripSeparator3
+            // 
+            toolStripSeparator3.Name = "toolStripSeparator3";
+            toolStripSeparator3.Size = new Size(6, 25);
+            // 
+            // btnUppercase
+            // 
+            btnUppercase.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            btnUppercase.ImageTransparentColor = Color.Magenta;
+            btnUppercase.Name = "btnUppercase";
+            btnUppercase.Size = new Size(66, 22);
+            btnUppercase.Text = "Uppercase";
+            btnUppercase.Click += btnUppercase_Click;
+            // 
+            // toolStripSeparator4
+            // 
+            toolStripSeparator4.Name = "toolStripSeparator4";
+            toolStripSeparator4.Size = new Size(6, 25);
+            // 
+            // btnCreateFromOrig
+            // 
+            btnCreateFromOrig.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            btnCreateFromOrig.ImageTransparentColor = Color.Magenta;
+            btnCreateFromOrig.Name = "btnCreateFromOrig";
+            btnCreateFromOrig.Size = new Size(117, 22);
+            btnCreateFromOrig.Text = "Create from original";
+            btnCreateFromOrig.Click += btnCreateFromOrig_Click;
             // 
             // gridLang
             // 
@@ -151,8 +206,7 @@
             gridLang.Location = new Point(0, 25);
             gridLang.MultiSelect = false;
             gridLang.Name = "gridLang";
-            gridLang.RowHeadersVisible = false;
-            gridLang.Size = new Size(1287, 768);
+            gridLang.Size = new Size(1384, 814);
             gridLang.TabIndex = 2;
             gridLang.CellEndEdit += gridLang_CellEndEdit;
             // 
@@ -161,11 +215,11 @@
             dataGridViewCellStyle1.BackColor = Color.FromArgb(224, 224, 224);
             dataGridViewCellStyle1.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 204);
             Key.DefaultCellStyle = dataGridViewCellStyle1;
-            Key.FillWeight = 250F;
+            Key.FillWeight = 300F;
             Key.Frozen = true;
             Key.HeaderText = "key";
             Key.Name = "Key";
-            Key.Width = 250;
+            Key.Width = 300;
             // 
             // FirstLang
             // 
@@ -190,7 +244,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1287, 815);
+            ClientSize = new Size(1384, 861);
             Controls.Add(gridLang);
             Controls.Add(toolStrip1);
             Controls.Add(statusStrip);
@@ -220,6 +274,13 @@
         private ToolStripStatusLabel toolStripStatusLabel2;
         private ToolStripStatusLabel lblCount;
         private ToolStripButton btnConvert;
+        private ToolStripSeparator toolStripSeparator3;
+        private ToolStripButton btnUppercase;
+        private ToolStripSeparator toolStripSeparator4;
+        private ToolStripButton btnCreateFromOrig;
+        private ToolStripButton btnNext;
+        private ToolStripButton btnPrev;
+        private ToolStripSeparator toolStripSeparator5;
         private DataGridViewTextBoxColumn Key;
         private DataGridViewTextBoxColumn FirstLang;
         private DataGridViewTextBoxColumn SecondLang;
