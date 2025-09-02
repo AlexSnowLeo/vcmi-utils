@@ -13,6 +13,9 @@ namespace TranslationEditor
         private string[] _langEngJson;
         private readonly bool _useSeparateFolders;
         private Dictionary<string, string> _langEngData;
+        private readonly TranslationStat _translationStat;
+        private string _translationStatFileName = string.Empty;
+
         private readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
         {
             ReadCommentHandling = JsonCommentHandling.Skip
@@ -28,6 +31,21 @@ namespace TranslationEditor
 
             _langFolder = config.GetSection("LangFolder").Value ?? "translation";
             lblFolder.Text = _langFolder;
+            var translationStatName = _langFolder.Split("\\").Where(x => !string.IsNullOrEmpty(x)).Last();
+            _translationStatFileName = $"{translationStatName}_stat.json";
+            if (File.Exists(_translationStatFileName))
+            {
+                var json = File.ReadAllText(_translationStatFileName);
+                _translationStat = JsonSerializer.Deserialize<TranslationStat>(json) ?? new TranslationStat();
+            } 
+            else
+            {
+                _translationStat = new TranslationStat { Name = translationStatName };
+
+                var json = JsonSerializer.Serialize(_translationStat);
+                File.WriteAllText(_translationStatFileName, json);
+            }
+
 
             if (!Directory.Exists(_langFolder))
             {
@@ -121,7 +139,7 @@ namespace TranslationEditor
             }
 
             string langValue = gridLang.Rows[e.RowIndex].Cells[2].Value as string ?? string.Empty;
-            langValue = langValue.Replace("\n", "\\n").Replace("\r", "").Replace("—", "-");
+            langValue = langValue.Replace("\n", "\\n").Replace("\r", "").Replace("—", "-").Replace("«", "\"").Replace("»", "\"");
             gridLang.Rows[e.RowIndex].Cells[2].Value = langValue;
 
             string enValue = gridLang.Rows[e.RowIndex].Cells[1].Value as string ?? string.Empty;
@@ -147,6 +165,10 @@ namespace TranslationEditor
                 _langJson[dataIndex] = dataRow;
 
             File.WriteAllLines(_langFileName, _langJson);
+
+            _translationStat.LastRow = e.RowIndex;
+            var json = JsonSerializer.Serialize(_translationStat);
+            File.WriteAllText(_translationStatFileName, json);
 
             UpdateCount();
         }
@@ -243,6 +265,12 @@ namespace TranslationEditor
                     : Color.LightCoral;
 
                 i++;
+            }
+
+            if (_translationStat.LastRow < gridLang.RowCount)
+            {
+                gridLang.FirstDisplayedScrollingRowIndex = _translationStat.LastRow;
+                gridLang.Rows[_translationStat.LastRow].Cells[2].Selected = true;
             }
 
             UpdateCount();
