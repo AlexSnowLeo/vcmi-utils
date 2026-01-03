@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using System.Globalization;
 using System.Text.Json;
 
 namespace TranslationEditor
@@ -13,7 +14,7 @@ namespace TranslationEditor
         private string[] _langEngJson;
         private readonly bool _useSeparateFolders;
         private Dictionary<string, string> _langEngData;
-        private readonly TranslationStat _translationStat;
+        private readonly TranslationSettings _translationStat;
         private string _translationStatFileName = string.Empty;
 
         private readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
@@ -32,15 +33,16 @@ namespace TranslationEditor
             _langFolder = config.GetSection("LangFolder").Value ?? "translation";
             lblFolder.Text = _langFolder;
             var translationStatName = _langFolder.Split("\\").Where(x => !string.IsNullOrEmpty(x)).Last();
-            _translationStatFileName = $"{translationStatName}_stat.json";
+            _translationStatFileName = $"{translationStatName}.settings.json";
             if (File.Exists(_translationStatFileName))
             {
                 var json = File.ReadAllText(_translationStatFileName);
-                _translationStat = JsonSerializer.Deserialize<TranslationStat>(json) ?? new TranslationStat();
+                _translationStat = JsonSerializer.Deserialize<TranslationSettings>(json) 
+                    ?? new TranslationSettings { Name = translationStatName };
             } 
             else
             {
-                _translationStat = new TranslationStat { Name = translationStatName };
+                _translationStat = new TranslationSettings { Name = translationStatName };
 
                 var json = JsonSerializer.Serialize(_translationStat);
                 File.WriteAllText(_translationStatFileName, json);
@@ -80,9 +82,28 @@ namespace TranslationEditor
             _langEngJson = File.ReadAllLines(Path.Combine(_useSeparateFolders ? _langEnFolder : _langFolder, $"{_langEng}.json"));
             _langEngData = JsonSerializer.Deserialize<Dictionary<string, string>>(string.Join("\r\n", _langEngJson), jsonSerializerOptions) ?? [];
 
+            var font = config.GetSection("EditorFont").Value ?? "Consolas";
+            var fontSize = float.Parse(config.GetSection("EditorFontSize").Value ?? "11");
+            gridLang.RowTemplate.DefaultCellStyle.Font = new Font(font, fontSize);
+            gridLang.DefaultCellStyle.Font = new Font(font, fontSize);
+            gridLang.DefaultCellStyle.Font = new Font(font, fontSize);
+
             _lang = config.GetSection("Lang").Value ?? "russian";
-            var langs = (config.GetSection("Langs").Value ?? "czech,polish,russian,swedish").Split(',');
+
+            string[] langs = [];
+            if (config.GetSection("Langs").Value == null)
+            {
+                langs = Directory.GetFiles(_langFolder, "*.json", SearchOption.TopDirectoryOnly)
+                    .Select(x => Path.GetFileNameWithoutExtension(x))
+                    .ToArray();
+            }
+            else
+            {
+                langs = (config.GetSection("Langs").Value ?? "czech,polish,russian,swedish").Split(',');
+            }
+                
             cbLang.Items.AddRange(langs);
+
             cbLang.SelectedItem = _lang;
             SecondLang.HeaderText = _lang;
         }
@@ -230,12 +251,12 @@ namespace TranslationEditor
             _lang = lang;
             SecondLang.HeaderText = _lang;
 
-            if (_useSeparateFolders)
+            /*if (_useSeparateFolders)
             {
                 _langEng = lang;
                 _langEngJson = File.ReadAllLines(Path.Combine(_langEnFolder!, $"{_langEng}.json"));
                 _langEngData = JsonSerializer.Deserialize<Dictionary<string, string>>(string.Join("\r\n", _langEngJson), jsonSerializerOptions) ?? [];
-            }
+            }*/
 
             _langFileName = Path.Combine(_langFolder, $"{_lang}.json");
             _langJson = [.. File.ReadAllLines(_langFileName)];

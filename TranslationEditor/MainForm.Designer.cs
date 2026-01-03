@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
@@ -50,6 +51,8 @@
             btnUppercase = new ToolStripButton();
             toolStripSeparator4 = new ToolStripSeparator();
             btnCreateFromOrig = new ToolStripButton();
+            toolStripSeparator6 = new ToolStripSeparator();
+            toolStripButton1 = new ToolStripButton();
             gridLang = new DataGridView();
             Key = new DataGridViewTextBoxColumn();
             FirstLang = new DataGridViewTextBoxColumn();
@@ -88,7 +91,7 @@
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripLabel2, cbLang, toolStripSeparator1, tbSearch, btnSearch, toolStripSeparator2, btnNext, btnPrev, toolStripSeparator5, btnConvert, toolStripSeparator3, btnUppercase, toolStripSeparator4, btnCreateFromOrig });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripLabel2, cbLang, toolStripSeparator1, tbSearch, btnSearch, toolStripSeparator2, btnNext, btnPrev, toolStripSeparator5, btnConvert, toolStripSeparator3, btnUppercase, toolStripSeparator4, btnCreateFromOrig, toolStripSeparator6, toolStripButton1 });
             toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(1384, 25);
@@ -195,6 +198,20 @@
             btnCreateFromOrig.Text = "Create from original";
             btnCreateFromOrig.Click += btnCreateFromOrig_Click;
             // 
+            // toolStripSeparator6
+            // 
+            toolStripSeparator6.Name = "toolStripSeparator6";
+            toolStripSeparator6.Size = new Size(6, 25);
+            // 
+            // toolStripButton1
+            // 
+            toolStripButton1.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            toolStripButton1.Image = (Image)resources.GetObject("toolStripButton1.Image");
+            toolStripButton1.ImageTransparentColor = Color.Magenta;
+            toolStripButton1.Name = "toolStripButton1";
+            toolStripButton1.Size = new Size(53, 22);
+            toolStripButton1.Text = "Options";
+            // 
             // gridLang
             // 
             gridLang.AllowUserToAddRows = false;
@@ -206,6 +223,7 @@
             gridLang.Location = new Point(0, 25);
             gridLang.MultiSelect = false;
             gridLang.Name = "gridLang";
+            gridLang.RowTemplate.DefaultCellStyle.Font = new Font("Consolas", 11F, FontStyle.Regular, GraphicsUnit.Pixel, 204);
             gridLang.Size = new Size(1384, 814);
             gridLang.TabIndex = 2;
             gridLang.CellEndEdit += gridLang_CellEndEdit;
@@ -284,5 +302,7 @@
         private DataGridViewTextBoxColumn Key;
         private DataGridViewTextBoxColumn FirstLang;
         private DataGridViewTextBoxColumn SecondLang;
+        private ToolStripSeparator toolStripSeparator6;
+        private ToolStripButton toolStripButton1;
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TranslationEditor
 {
-    internal class TranslationStat
+    internal class TranslationSettings
     {
         public string Name { get; set; } = string.Empty;
         public int LastRow { get; set; }
